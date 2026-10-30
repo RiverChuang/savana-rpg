@@ -4,6 +4,8 @@
 
 **版本：0.1.0** · [開始遊戲](https://riverchuang.github.io/savana-rpg/) · [GitHub Repository](https://github.com/RiverChuang/savana-rpg)
 
+![正式站森林探索畫面](docs/screenshots/live-game.png)
+
 > 本版是明確標示的 **Game Fiction 原創環境故事**。原教案及鄒族文化來源尚未提供，因此沒有把待確認內容當作文化事實。請先閱讀 [文化待審清單](docs/CULTURE_REVIEW.md)。
 
 ## 可以玩什麼

@@ -27,7 +27,7 @@ Verified through the actual UI at a local HTTP URL with the `/savana-rpg/` prefi
 - FIXED: closing a modal could move focus to the header instead of its trigger; focus restoration corrected and retested.
 - PASS: local HTTP verification checked all 47 HTML/CSS/JS/SVG runtime resources and their content types.
 
-Screenshots: [Mobile exploration](screenshots/mobile-exploration.png), [Boss battle](screenshots/boss-battle.png), [Ending](screenshots/ending.png).
+Screenshots: [Home](screenshots/home.png), [Mobile exploration](screenshots/mobile-exploration.png), [Boss battle](screenshots/boss-battle.png), [Ending](screenshots/ending.png), [Live game](screenshots/live-game.png).
 
 ## Culture and media
 
@@ -37,4 +37,12 @@ Screenshots: [Mobile exploration](screenshots/mobile-exploration.png), [Boss bat
 
 ## Deployment
 
-Pending first publication. Replace this section with the actual Pages workflow run and live resource verification results after successful deployment.
+- PASS: public repository created at https://github.com/RiverChuang/savana-rpg and main pushed with six phase commits.
+- PASS: official GitHub Actions build/test/deploy workflow [41062141712](https://github.com/RiverChuang/savana-rpg/actions/runs/41062141712), source commit `7df0347ce3dabc5361e8291f80ee4204557eaf8c`. Both build and deploy jobs succeeded.
+- PASS: Pages API confirms `build_type: workflow` and `https_enforced: true`.
+- PASS: https://riverchuang.github.io/savana-rpg/ opens successfully in the browser.
+- PASS: `node scripts/verify-http.mjs https://riverchuang.github.io/savana-rpg/` verified all **47** live HTML/CSS/JS/SVG runtime resources with successful HTTP status and expected content types.
+- PASS: on the actual live origin, start a new game, complete NPC dialogue and first clue, then advance to Chapter 1. No browser error/warning entries were captured.
+- The full eight-chapter browser playthrough was performed locally with the same runtime source; live smoke verification covers startup and Chapter 1. Domain tests exercise the entire campaign in both local and GitHub Actions environments.
+
+No known blocking gameplay or JavaScript errors remain. Editorial limitation: source-based Tsou cultural content is pending review and is not represented as verified in this release. Saves remain browser-local and do not synchronize across origins or devices.

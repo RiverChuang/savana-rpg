@@ -7,3 +7,5 @@
 - Static: local module graph and asset paths, syntax, prohibited runtime services, production copy allowlist.
 - Browser: launch/new/continue, movement/hotspots, dialogue, battle, inventory/equipment, journal tabs, settings/reset, keyboard/focus, no console exceptions, no overflow at 390/768/1440 widths.
 - Deployment: Pages workflow success and live HTML/CSS/module/SVG HTTP responses under `/savana-rpg/`.
+
+Execution results: [docs/VALIDATION.md](docs/VALIDATION.md). The final automated suite has 16 passing tests. Full browser playthrough and live startup/resource checks were also performed.

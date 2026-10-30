@@ -21,3 +21,6 @@ Only verified cultural records may be presented as source-based content. Missing
 
 ## GitHub Pages Completion
 Public repository, clean main pushed, official Actions deployment successful, Pages build_type=workflow, and live document/module/style/art URLs verified.
+
+## Acceptance evidence
+MVP gameplay, local tests, browser checks and initial GitHub Pages deployment passed on 2026-10-30. See [docs/VALIDATION.md](docs/VALIDATION.md) for the actual run and verification scope. Cultural review is still pending; no claim of community approval is made.
