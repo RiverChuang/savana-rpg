@@ -1,6 +1,6 @@
 export const story = {
   id: 'story01', title: '瑟瓦納：森林的抉擇', fictional: true, category: 'game-fiction',
-  description: '一本未完成的筆記，一段學會觀察與選擇的森林旅程。',
+  description: '一本未完成的筆記，一段學會觀察與選擇的森林旅程。', requiresPledge: true,
   chapters: [
     { title: '迷霧中的瑟瓦納', label: '序章', location: 'camp', quest: 'prologue', trainingEnemy: 'mist' },
     { title: '森林的警告', label: '第一章', location: 'trail', quest: 'warning', trainingEnemy: 'mist' },

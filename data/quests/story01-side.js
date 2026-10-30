@@ -10,7 +10,7 @@ const rows = [
   ['care', '從今天的一小步開始', '整理一份能持續執行的森林守護清單。', 'careHeart', 6, { leafCharm: 1 }, '共好清單'],
 ];
 export const sideQuests = rows.map(([id, title, description, target, chapter, items, gridLabel], grid) => ({
-  id, type: 'side', title, description, grid, gridLabel, requirements: [],
+  id, storyId: 'story01', type: 'side', title, description, grid, gridLabel, requirements: [],
   objectives: [{ event: 'action', target, text: description }], rewards: { exp: 70, harmony: 3, items },
   prerequisites: [], unlockConditions: [{ kind: 'chapter', value: chapter }], nextQuest: null,
   fictional: true, category: 'game-fiction',

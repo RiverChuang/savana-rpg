@@ -49,3 +49,17 @@ test('event listeners unsubscribe and pending culture is never verified', () => 
   bus.emit('x'); off(); bus.emit('x'); assert.equal(count, 1);
   assert.equal(CultureSourceSystem.verified([{ confirmed: false, status: 'TODO_CULTURE_REVIEW' }]).length, 0);
 });
+test('quests for another story never unlock in the active story', () => {
+  const s = createGameState('story01');
+  const quests = {
+    local: { id: 'local', storyId: 'story01', prerequisites: [], unlockConditions: [], objectives: [] },
+    other: { id: 'other', storyId: 'story02', prerequisites: [], unlockConditions: [], objectives: [] },
+  };
+  assert.deepEqual(QuestSystem.unlock(s, quests), ['local']); assert.equal(s.quests.other, undefined);
+});
+test('changing health equipment repeatedly cannot create free healing', () => {
+  const s = createGameState('test'); s.player.hp = 30; s.player.inventory.vest = 1;
+  const items = { vest: { slot: 'charm', hp: 12, defense: 2 } };
+  EquipmentSystem.equip(s, 'vest', items); EquipmentSystem.equip(s, 'vest', items);
+  assert.equal(s.player.hp, 30);
+});

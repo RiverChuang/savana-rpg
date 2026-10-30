@@ -9,7 +9,7 @@ const rows = [
   ['pledge', '敬畏的誓言', '寫下一個能帶回日常的具體承諾。', [{ event: 'talk', target: 'farewell', text: '與禾回顧旅程' }, { event: 'pledge', target: 'personal', text: '寫下個人環境承諾' }], 900],
 ];
 export const mainQuests = rows.map(([id, title, description, objectives, exp], i) => ({
-  id, type: 'main', title, description, requirements: [], objectives,
+  id, storyId: 'story01', type: 'main', title, description, requirements: [], objectives,
   rewards: { exp, items: i === 0 ? { tonic: 2 } : {} },
   prerequisites: i ? [rows[i - 1][0]] : [], unlockConditions: [{ kind: 'chapter', value: i }],
   nextQuest: rows[i + 1]?.[0] || null, fictional: true, category: 'game-fiction',

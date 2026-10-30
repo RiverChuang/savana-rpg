@@ -75,10 +75,23 @@ test('invalid choices/pledges do not grant rewards or skip story gates', () => {
   assert.throws(() => game.advance()); assert.throws(() => game.travel('summit'));
   assert.equal(game.state.player.exp, 0); assert.equal(game.state.completed, false);
 });
+test('a second data-only story plays through without changing battle or quest core', () => {
+  const chapter = { title: '新故事', label: '序章', location: 'secondCamp', quest: 'secondQuest', trainingEnemy: 'mist' };
+  const extra = {
+    ...content, defaultStory: 'story02',
+    stories: { ...content.stories, story02: { id: 'story02', chapters: [chapter] } },
+    locations: { ...content.locations, secondCamp: { id: 'secondCamp', hotspots: [{ id: 'secondGuide', kind: 'dialogue', ref: 'welcome', x: 30, y: 55 }] } },
+    quests: { ...content.quests, secondQuest: { id: 'secondQuest', storyId: 'story02', type: 'main', prerequisites: [], unlockConditions: [], objectives: [{ event: 'talk', target: 'welcome' }], rewards: { exp: 80 } } },
+  };
+  const game = new Game(extra, storage()); game.newGame();
+  assert.deepEqual(Object.keys(game.state.quests), ['secondQuest']);
+  game.interact('secondGuide'); while (game.state.dialogue) game.nextDialogue(); game.advance();
+  assert.equal(game.state.completed, true); assert.equal(game.saves.load().valid, true);
+});
 test('save corruption, missing nested fields, future schema, storage quota and unknown references are rejected', () => {
   const store = storage(), game = new Game(content, store); game.newGame();
   const original = JSON.parse(JSON.stringify(game.state));
-  const mutations = [s => { s.version = 999; }, s => { delete s.player.equipment; }, s => { s.player.attack = null; }, s => { s.clues.push('unknown'); }, s => { s.quests.prologue.progress = []; }, s => { s.chapter = 100; }, s => { s.player.skills.push('missing'); }, s => { s.player.exp = -1; }, s => { s.completed = true; }];
+  const mutations = [s => { s.version = 999; }, s => { delete s.player.equipment; }, s => { s.player.attack = null; }, s => { s.clues.push('unknown'); }, s => { s.quests.prologue.progress = []; }, s => { s.chapter = 100; }, s => { s.player.skills.push('missing'); }, s => { s.player.exp = -1; }, s => { s.completed = true; }, s => { s.decisions.push({ id: 'missing', choice: 'x', reason: 'x', result: 'x' }); }, s => { s.player.skills.push('toString'); }, s => { s.interactions.push('unknown'); }, s => { s.player.attack += 99; }];
   for (const mutate of mutations) { const s = structuredClone(original); mutate(s); store.setItem(SAVE_KEY, JSON.stringify({ state: s })); assert.equal(game.saves.load().valid, false); }
   const quota = new Game(content, { getItem: () => null, setItem: () => { throw new Error('QuotaExceededError'); } }); quota.newGame(); assert.equal(quota.lastSave.valid, false);
 });

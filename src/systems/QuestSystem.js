@@ -7,6 +7,7 @@ export class QuestSystem {
   static unlock(state, quests) {
     const unlocked = [];
     for (const quest of Object.values(quests)) {
+      if (quest.storyId && quest.storyId !== state.storyId) continue;
       if (state.quests[quest.id]) continue;
       if (quest.prerequisites.some(id => state.quests[id]?.status !== 'completed')) continue;
       if (!quest.unlockConditions.every(c => conditionMet(state, c))) continue;

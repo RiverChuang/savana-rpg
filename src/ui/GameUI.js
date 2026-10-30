@@ -7,8 +7,9 @@ import { achievementLabels } from '../systems/AchievementSystem.js';
 import { CultureSourceSystem } from '../systems/CultureSourceSystem.js';
 import { ClueSystem } from '../systems/ClueSystem.js';
 import { EnvironmentGridSystem } from '../systems/EnvironmentGridSystem.js';
+import { PLEDGE_ACTIONS } from '../systems/PledgeSystem.js';
 
-const button = (action, label, param = '', cls = 'button', disabled = false) => `<button class="${cls}" data-action="${action}" data-param="${e(param)}" ${disabled ? 'disabled' : ''}>${label}</button>`;
+const button = (action, label, param = '', cls = 'button', disabled = false) => `<button class="${cls}" data-action="${action}" data-param="${e(param)}" ${cls.split(' ').includes('tab') ? `aria-pressed="${cls.split(' ').includes('selected')}"` : ''} ${disabled ? 'disabled' : ''}>${label}</button>`;
 const progressBar = (value, max, cls = '') => `<span class="bar ${cls}" role="progressbar" aria-label="${cls === 'exp' ? '經驗值' : '生命值'}" aria-valuenow="${value}" aria-valuemin="0" aria-valuemax="${max || 1}"><span style="width:${Math.max(0, Math.min(100, value / (max || 1) * 100))}%"></span></span>`;
 
 export class GameUI {
@@ -85,7 +86,7 @@ export class GameUI {
     }
   }
   render() {
-    const s = this.s, p = s.player, game = this.game, active = document.activeElement;
+    const s = this.s, p = s.player, game = this.game, active = document.activeElement, wasModalOpen = this.overlay.open;
     const focus = active?.dataset?.action ? { action: active.dataset.action, param: active.dataset.param } : null;
     document.documentElement.classList.toggle('reduced-motion', s.settings.reducedMotion);
     this.app.innerHTML = `<header class="site-header">
@@ -101,7 +102,7 @@ export class GameUI {
       </div>
     </header>
     <main class="game-shell" id="exploration" tabindex="-1">
-      <div class="chapter-heading"><div><span class="eyebrow">FOREST CHRONICLES <span class="dot">/</span> ${e(game.chapter.label)}</span><h1>${s.completed ? '讓旅程，成為日常的一部分' : e(game.chapter.title)}</h1></div><span class="chapter-counter">${String(s.chapter + 1).padStart(2, '0')}<span> / 08</span></span></div>
+      <div class="chapter-heading"><div><span class="eyebrow">FOREST CHRONICLES <span class="dot">/</span> ${e(game.chapter.label)}</span><h1>${s.completed ? '讓旅程，成為日常的一部分' : e(game.chapter.title)}</h1></div><span class="chapter-counter">${String(s.chapter + 1).padStart(2, '0')}<span> / ${String(game.story.chapters.length).padStart(2, '0')}</span></span></div>
       <div class="game-layout"><section class="exploration-column" aria-label="森林探索地圖">
         <div class="map-frame">${forestScene(s, game.location, s.started)}
         ${!s.started ? `<div class="welcome-card"><span class="eyebrow">A JOURNEY OF CHOICES</span><h2>森林有它的聲音。<br>而你，有你的選擇。</h2><p>走進迷霧、拾起線索，<br>在每一次停留裡，找到繼續前進的理由。</p><div class="welcome-actions">${button(game.saves.exists() ? 'continue' : 'new', `${game.saves.exists() ? '繼續冒險' : '開始旅程'} ${icon('arrow')}`, '', 'button primary')}${game.saves.exists() ? button('new', '重新開始', '', 'text-button') : ''}</div><small>約 15–30 分鐘 · 回合制 RPG · 無需帳號</small></div>` : ''}
@@ -111,8 +112,8 @@ export class GameUI {
       </section><aside class="journal-sidebar" aria-label="任務與旅程筆記">${this.sidebar()}</aside></div>
       <footer class="game-footer"><span>${icon('leaf')} 慢一點，才能看見更多。</span><div>${button('menu', '原創故事與文化來源', 'sources', 'text-button')}<span>v0.1.0</span></div></footer>
     </main>`;
-    this.renderModal();
-    if (focus) {
+    this.renderModal(focus);
+    if (focus && !(wasModalOpen && !this.overlay.open)) {
       const scope = this.overlay.open ? this.overlay : this.app;
       const match = [...scope.querySelectorAll('[data-action]')].find(n => n.dataset.action === focus.action && n.dataset.param === focus.param && !n.disabled);
       if (match) match.focus({ preventScroll: true });
@@ -122,11 +123,11 @@ export class GameUI {
     const q = this.c.quests[this.game.chapter.quest], s = this.s;
     const sideQuests = Object.values(this.c.quests).filter(q => q.type === 'side' && s.quests[q.id]);
     const done = sideQuests.filter(q => s.quests[q.id].status === 'completed').length;
-    return `<section class="quest-card"><div class="panel-heading"><span class="eyebrow">TRAVELER'S JOURNAL</span>${icon('book')}</div><div class="journal-title"><h2>旅程筆記</h2><span>${s.completed ? '已完成' : '進行中'}</span></div><div class="quest-tabs" role="tablist" aria-label="任務類型">${button('quest-tab', '主線任務', 'main', `tab ${this.questTab === 'main' ? 'selected' : ''}`)}${button('quest-tab', `支線任務 <small>${done}/9</small>`, 'side', `tab ${this.questTab === 'side' ? 'selected' : ''}`)}</div>
+    return `<section class="quest-card"><div class="panel-heading"><span class="eyebrow">TRAVELER'S JOURNAL</span>${icon('book')}</div><div class="journal-title"><h2>旅程筆記</h2><span>${s.completed ? '已完成' : '進行中'}</span></div><div class="quest-tabs" role="group" aria-label="任務類型">${button('quest-tab', '主線任務', 'main', `tab ${this.questTab === 'main' ? 'selected' : ''}`)}${button('quest-tab', `支線任務 <small>${done}/9</small>`, 'side', `tab ${this.questTab === 'side' ? 'selected' : ''}`)}</div>
       ${this.questTab === 'main' ? `<div class="quest-label">${icon('flag')} ${e(this.game.chapter.label)} · 主線</div><h3>${e(q.title)}</h3><p class="quest-description">${e(q.description)}</p><ul class="objectives">${QuestSystem.progress(s, q).map(o => `<li class="${o.done ? 'done' : ''}"><span>${o.done ? icon('check') : ''}</span>${e(o.text)}</li>`).join('')}</ul><div class="quest-reward"><span>任務獎勵</span><strong>${icon('sparkle')} ${q.rewards.exp} EXP</strong></div>${s.quests[q.id]?.status === 'completed' ? `<div class="quest-complete">${icon('check')} ${s.completed ? '這段旅程已完成' : '目標完成，可以繼續旅程'}</div>` : ''}` : `<div class="side-list">${sideQuests.map(q => `<div class="side-entry ${s.quests[q.id].status === 'completed' ? 'done' : ''}">${icon(s.quests[q.id].status === 'completed' ? 'check' : 'leaf')}<div><strong>${e(q.title)}</strong><small>${s.quests[q.id].status === 'completed' ? '已完成 · +70 EXP' : e(q.description)}</small></div></div>`).join('')}</div>`}
     </section><section class="field-note"><span class="eyebrow">A MOMENT TO NOTICE</span><div>${icon('leaf')}<h3>森林不只是背景</h3></div><p>${s.started ? '點擊地圖上的標記，與角色交談、觀察環境。線索會收進六何筆記，支線則會點亮共好九宮格。' : '在這裡，觀察也是一種力量。你找到的線索，會讓下一次選擇有更多可能。'}</p>${button('menu', `探索指南 ${icon('arrow')}`, 'help', 'text-button')}</section><section class="recent-notes"><div class="panel-heading"><span>沿途拾記</span><small>${s.clues.length} / 6 線索</small></div>${(s.log.length ? s.log.slice(-3).reverse() : [{ text: '空白的筆記，正在等待你的第一個故事。', type: 'info' }]).map(l => `<p class="note-${l.type}"><span></span>${e(l.text)}</p>`).join('')}</section><div class="fiction-note">本作場景與角色為遊戲原創。<br>具體文化內容待來源確認與文化審閱。</div>`;
   }
-  renderModal() {
+  renderModal(focus) {
     const s = this.s;
     let kind = this.menu, title = '', body = '', locked = false;
     if (s.battle) { kind = 'battle'; title = '森林遭遇'; body = this.battleView(); locked = true; }
@@ -144,11 +145,19 @@ export class GameUI {
     else if (kind === 'help') { title = '帶著好奇心，慢慢前進'; body = `<div class="guide-list"><p><strong>01 · 點擊發光標記</strong>對話氣泡是角色；金色微光是線索；綠葉是支線；紅色刀劍是原創敵人。</p><p><strong>02 · 看看旅程筆記</strong>完成本章所有目標後，點「繼續旅程」。探索足跡可返回已解鎖地區，補做支線。</p><p><strong>03 · 做好戰鬥準備</strong>背包裡有手杖可裝備。技能有回合冷卻；每三回合敵人會強擊，可使用防禦。</p><p><strong>04 · 思考不是答題</strong>已找到的線索能解除相應敵人的防禦。沒有線索也能攻擊、用技能或逃跑。</p><p><strong>05 · 隨時休息</strong>地圖下方的營地休息可免費恢復生命。戰敗保留進度並回復生命。遭遇練習可累積經驗。</p><p><strong>06 · 鍵盤與觸控</strong>點擊標記就能互動；也可用 WASD／方向鍵移動、E 互動。Tab 切換按鈕，Enter 啟動。</p><p><strong>07 · 留下你的理由</strong>抉擇需要選擇與理由，沒有單一標準答案。最後寫下至少 8 字的個人承諾。</p></div>`; }
     else if (kind === 'pledge') { title = '把承諾，帶回日常'; body = this.pledgeView(); }
     else if (kind === 'ending') { title = '森林的下一頁，由你寫下'; body = this.endingView(); }
-    if (!kind) { if (this.overlay.open) this.overlay.close(); return; }
+    if (!kind) {
+      if (this.overlay.open) {
+        this.overlay.close();
+        const key = this.returnFocusKey;
+        const target = key && [...this.app.querySelectorAll('[data-action]')].find(n => n.dataset.action === key.action && n.dataset.param === key.param && !n.disabled);
+        (target || this.app.querySelector('#exploration'))?.focus({ preventScroll: true });
+      }
+      return;
+    }
     const previousKind = this.overlay.dataset.kind;
     this.overlay.className = `modal modal-${kind}`; this.overlay.dataset.kind = kind;
     this.overlay.innerHTML = `<div class="modal-heading"><div><span class="eyebrow">SAVANA · FOREST CHRONICLES</span><h2 id="dialog-title">${e(title)}</h2></div>${!locked ? button('close', `${icon('close')}<span class="sr-only">關閉視窗</span>`, '', 'icon-button') : ''}</div><div class="modal-body">${body}</div>`;
-    if (!this.overlay.open) { this.returnFocus = document.activeElement; this.overlay.showModal(); }
+    if (!this.overlay.open) { this.returnFocusKey = focus; this.overlay.showModal(); }
     if (previousKind !== kind) this.overlay.querySelector('input,textarea,select,button')?.focus();
   }
   battleView() {
@@ -165,7 +174,7 @@ export class GameUI {
   journalView() {
     const tabs = [['clues', '六何線索'], ['choices', '選擇與理由'], ['achievements', '旅人成就'], ['sources', '文化來源']];
     let body = '';
-    if (this.journalTab === 'clues') body = `<p class="muted">已發現 ${this.s.clues.length} / 6。從地圖探索找到線索；部分線索能在戰鬥中幫助「思考」。</p><div class="clue-grid">${Object.values(this.c.clues).map(clue => { const found = this.s.clues.includes(clue.id); return `<article class="clue-card ${found ? 'found' : ''}"><span class="eyebrow">${clue.label}</span>${icon(found ? 'check' : 'lock')}<h3>${e(clue.question)}</h3><p>${found ? e(clue.text) : `尚未發現 · ${e(this.c.locations[clue.location].name)}`}</p></article>`; }).join('')}</div>`;
+    if (this.journalTab === 'clues') body = `<p class="muted">已發現 ${this.s.clues.length} / 6。從地圖探索找到線索；部分線索能在戰鬥中幫助「思考」。</p><div class="clue-grid">${ClueSystem.notebook(this.s, this.c.clues).map(clue => { const found = clue.discovered; return `<article class="clue-card ${found ? 'found' : ''}"><span class="eyebrow">${clue.label}</span>${icon(found ? 'check' : 'lock')}<h3>${e(clue.question)}</h3><p>${found ? e(clue.text) : `尚未發現 · ${e(this.c.locations[clue.location].name)}`}</p></article>`; }).join('')}</div>`;
     else if (this.journalTab === 'choices') body = `<p class="muted">把「選擇 → 理由 → 結果」放在一起，重新看見自己的思考。</p>${this.s.decisions.length ? this.s.decisions.map(d => `<article class="reflection-record"><h3>${e(this.c.decisions[d.id].title)}</h3><dl><dt>我的選擇</dt><dd>${e(d.choice)}</dd><dt>我的理由</dt><dd>${e(d.reason)}</dd><dt>看見的結果</dt><dd>${e(d.result)}</dd></dl></article>`).join('') : '<div class="empty-state">新的岔路還在前方。繼續探索，就會遇見需要想一想的時刻。</div>'}`;
     else if (this.journalTab === 'achievements') body = `<div class="achievement-grid">${Object.entries(achievementLabels).map(([id, label]) => `<div class="achievement ${this.s.achievements.includes(id) ? 'earned' : ''}">${icon(this.s.achievements.includes(id) ? 'sparkle' : 'lock')}<strong>${e(label)}</strong><small>${this.s.achievements.includes(id) ? '已解鎖' : '等待旅程點亮'}</small></div>`).join('')}</div>`;
     else body = this.sourcesView();
@@ -187,10 +196,10 @@ export class GameUI {
     return `<form data-form="choice" class="stack"><p>${e(d.prompt)}</p><fieldset><legend>我的選擇</legend>${d.choices.map((choice, i) => `<label class="radio-card"><input type="radio" name="choice" value="${choice.id}" ${i === 0 ? 'checked' : ''} required><span>${e(choice.text)}</span></label>`).join('')}</fieldset><label for="choice-reason">我這樣選擇，是因為……</label><select id="choice-reason" name="reason" required><option value="">選擇一個最接近你想法的理由</option>${d.reasons.map(reason => `<option value="${e(reason)}">${e(reason)}</option>`).join('')}</select><p class="fine-print">沒有唯一標準答案。每一個選擇都能繼續故事；理由與結果會留在筆記裡。</p><button class="button primary wide" type="submit">記下選擇，看看它帶來什麼 ${icon('arrow')}</button></form>`;
   }
   pledgeView() {
-    return `<form data-form="pledge" class="stack"><p>想一件你能做到的小事，寫下「何時、在哪裡、要做什麼」。這是你的個人環境承諾。</p><label for="pledge-action">我願意從哪裡開始？</label><select id="pledge-action" name="action" required><option value="">選擇一個行動方向</option>自備用品，減少一次性棄物</option>遵守步道規範，尊重觀察距離</option>記錄環境變化，和他人分享觀察</option>邀請同行者，一起持續守護</option></select><label for="pledge-text">我的承諾（8–240 字）</label><textarea id="pledge-text" name="text" minlength="8" maxlength="240" rows="4" placeholder="例如：下次走進森林時，我會自備水壺，把自己的垃圾帶回來。" required>${e(this.s.pledge?.text || '')}</textarea><label class="checkbox-label"><input type="checkbox" required>這是我願意帶回日常的個人承諾。</label><button class="button primary wide" type="submit">將承諾寫入森林筆記 ${icon('leaf')}</button><p class="fine-print">內容只保存在此瀏覽器，不會上傳。這不是傳統誓詞或祭儀。</p></form>`;
+    return `<form data-form="pledge" class="stack"><p>想一件你能做到的小事，寫下「何時、在哪裡、要做什麼」。這是你的個人環境承諾。</p><label for="pledge-action">我願意從哪裡開始？</label><select id="pledge-action" name="action" required><option value="">選擇一個行動方向</option>${PLEDGE_ACTIONS.map(action => `<option value="${e(action)}">${e(action)}</option>`).join('')}</select><label for="pledge-text">我的承諾（8–240 字）</label><textarea id="pledge-text" name="text" minlength="8" maxlength="240" rows="4" placeholder="例如：下次走進森林時，我會自備水壺，把自己的垃圾帶回來。" required>${e(this.s.pledge?.text || '')}</textarea><label class="checkbox-label"><input type="checkbox" required>這是我願意帶回日常的個人承諾。</label><button class="button primary wide" type="submit">將承諾寫入森林筆記 ${icon('leaf')}</button><p class="fine-print">內容只保存在此瀏覽器，不會上傳。這不是傳統誓詞或祭儀。</p></form>`;
   }
   endingView() {
     const sides = Object.values(this.c.quests).filter(q => q.type === 'side' && this.s.quests[q.id]?.status === 'completed').length;
-    return `<div class="ending"><span class="ending-emblem">${icon('leaf')}</span><span class="eyebrow">THE JOURNEY CONTINUES</span><h3>敬畏，從願意停下來開始。</h3><p>${this.s.player.harmony >= 30 ? '你把許多小行動連在一起。沿途的改變，來自一次次願意觀察、討論與回來。' : '你走過了森林，也看見每個選擇都能留下不同的痕跡。還有一些行動，等待你在日常裡開始。'}</p><blockquote>${e(this.s.pledge?.text)}</blockquote><div class="ending-stats"><span><strong>8</strong>故事章節</span><span><strong>${this.s.clues.length}/6</strong>探索線索</span><span><strong>${sides}/9</strong>共好行動</span><span><strong>${this.s.decisions.length}</strong>深思抉擇</span></div>${button('close', '帶著承諾，繼續走走', '', 'button primary wide')}<p class="fine-print">主線已完成並存檔。你仍可回訪地圖、完成支線，或查看旅人筆記。文化相關內容仍待來源提供與審閱。</p></div>`;
+    return `<div class="ending"><span class="ending-emblem">${icon('leaf')}</span><span class="eyebrow">THE JOURNEY CONTINUES</span><h3>敬畏，從願意停下來開始。</h3><p>${this.s.player.harmony >= 30 ? '你把許多小行動連在一起。沿途的改變，來自一次次願意觀察、討論與回來。' : '你走過了森林，也看見每個選擇都能留下不同的痕跡。還有一些行動，等待你在日常裡開始。'}</p><blockquote>${e(this.s.pledge?.text)}</blockquote><div class="ending-stats"><span><strong>${this.game.story.chapters.length}</strong>故事章節</span><span><strong>${this.s.clues.length}/6</strong>探索線索</span><span><strong>${sides}/9</strong>共好行動</span><span><strong>${this.s.decisions.length}</strong>深思抉擇</span></div>${button('close', '帶著承諾，繼續走走', '', 'button primary wide')}<p class="fine-print">主線已完成並存檔。你仍可回訪地圖、完成支線，或查看旅人筆記。文化相關內容仍待來源提供與審閱。</p></div>`;
   }
 }

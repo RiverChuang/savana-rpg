@@ -7,7 +7,7 @@ export function recalculateStats(player, items = {}, heal = false) {
   player.maxHp = 90 + (player.level - 1) * 16 + (charm?.hp || 0);
   player.attack = 14 + (player.level - 1) * 3 + (weapon?.attack || 0);
   player.defense = 5 + (player.level - 1) * 2 + (charm?.defense || 0);
-  player.hp = heal ? player.maxHp : Math.min(player.maxHp, player.hp + Math.max(0, player.maxHp - oldMax));
+  player.hp = heal ? player.maxHp : Math.max(1, Math.min(player.maxHp, player.hp + player.maxHp - oldMax));
 }
 export class LevelSystem {
   static update(state, items) {
