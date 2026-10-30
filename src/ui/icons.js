@@ -1,0 +1,26 @@
+const paths = {
+  leaf: '<path d="M5 17C3 6 10 3 21 3c0 11-3 18-14 16M4 21 17 8"/>',
+  compass: '<circle cx="12" cy="12" r="9"/><path d="m16 8-3 5-5 3 3-5Z"/>',
+  map: '<path d="m3 5 6-2 6 2 6-2v16l-6 2-6-2-6 2Zm6-2v16m6-14v16"/>',
+  book: '<path d="M12 5Q6 1 2 4v16q5-3 10 0 5-3 10 0V4q-5-3-10 1Zm0 0v15"/>',
+  bag: '<rect x="5" y="6" width="14" height="15" rx="4"/><path d="M9 6V4a3 3 0 0 1 6 0v2M5 13h14m-7-3v6"/>',
+  grid: '<rect x="3" y="3" width="5" height="5" rx="1"/><rect x="10" y="3" width="5" height="5" rx="1"/><rect x="17" y="3" width="5" height="5" rx="1"/><path d="M3 12h5m2 0h5m2 0h5M3 19h5m2 0h5m2 0h5"/>',
+  heart: '<path d="M20 5c-4-3-8 1-8 1S8 2 4 5c-6 5 3 12 8 16 5-4 14-11 8-16Z"/>',
+  sword: '<path d="m5 19 11-11 4-5 1 6-11 11M3 14l7 7m-6 0 3-3"/>',
+  shield: '<path d="m12 2 9 4v6q-2 7-9 10-7-3-9-10V6Z"/><path d="m8 12 3 3 5-6"/>',
+  sparkle: '<path d="m12 2 3 7 7 3-7 3-3 7-3-7-7-3 7-3Z"/>',
+  chat: '<path d="M21 12a9 9 0 0 1-9 9 12 12 0 0 1-5-1l-5 2 2-5a9 9 0 1 1 17-5Z"/><path d="M8 11h8m-8 4h5"/>',
+  check: '<path d="m5 12 4 4L19 6"/>',
+  arrow: '<path d="M4 12h16m-6-6 6 6-6 6"/>',
+  save: '<path d="M4 3h13l4 4v14H3V3Zm3 0v7h10V3M7 21v-7h10v7"/>',
+  settings: '<path d="m9 3 1-1h4l1 4 4-1 2 4-3 3 3 3-2 4-4-1-1 4h-4l-1-4-4 1-2-4 3-3-3-3 2-4 4 1Z"/><circle cx="12" cy="12" r="3"/>',
+  camp: '<path d="m12 3 10 18H2Zm0 9 5 9H7Z"/>',
+  info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v1"/>',
+  potion: '<path d="M9 2h6m-5 0v6L5 17q-2 5 7 5t7-5l-5-9V2M7 15h10"/>',
+  close: '<path d="m6 6 12 12M6 18 18 6"/>',
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l2 2m10 10 2 2M5 19l2-2M17 7l2-2"/>',
+  lock: '<rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V6a4 4 0 0 1 8 0v4"/>',
+  flag: '<path d="M5 22V3q6-3 12 0v10q-6-3-12 0"/>',
+};
+export const icon = (name, cls = '') => `<svg class="icon ${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[name] || paths.leaf}</svg>`;
+export const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
