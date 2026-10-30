@@ -5,6 +5,8 @@ import { StorySystem } from '../systems/StorySystem.js';
 import { ExperienceSystem } from '../systems/ExperienceSystem.js';
 import { achievementLabels } from '../systems/AchievementSystem.js';
 import { CultureSourceSystem } from '../systems/CultureSourceSystem.js';
+import { ClueSystem } from '../systems/ClueSystem.js';
+import { EnvironmentGridSystem } from '../systems/EnvironmentGridSystem.js';
 
 const button = (action, label, param = '', cls = 'button', disabled = false) => `<button class="${cls}" data-action="${action}" data-param="${e(param)}" ${disabled ? 'disabled' : ''}>${label}</button>`;
 const progressBar = (value, max, cls = '') => `<span class="bar ${cls}" role="progressbar" aria-label="${cls === 'exp' ? '經驗值' : '生命值'}" aria-valuenow="${value}" aria-valuemin="0" aria-valuemax="${max || 1}"><span style="width:${Math.max(0, Math.min(100, value / (max || 1) * 100))}%"></span></span>`;
@@ -68,8 +70,8 @@ export class GameUI {
     try {
       const values = new FormData(form);
       if (form.dataset.form === 'new') { this.menu = null; this.game.newGame(values.get('name')); }
-      else if (form.dataset.form === 'choice') { this.game.choose(values.get('choice'), values.get('reason')); }
-      else if (form.dataset.form === 'pledge') { this.menu = null; this.game.makePledge(values.get('text'), values.get('action')); this.notice('你的個人承諾已寫入筆記。完成本章後，就能看見結局。'); }
+      else if (form.dataset.form === 'choice') { const record = this.game.choose(values.get('choice'), values.get('reason')); this.notice(record.result); }
+      else if (form.dataset.form === 'pledge') { this.game.makePledge(values.get('text'), values.get('action')); this.menu = null; this.render(); this.notice('你的個人承諾已寫入筆記。完成本章後，就能看見結局。'); }
     } catch (error) { this.notice(error.message); }
   }
   keydown(event) {
@@ -170,7 +172,7 @@ export class GameUI {
     return `<div class="journal-modal-tabs">${tabs.map(([id, name]) => button('journal-tab', name, id, `tab ${this.journalTab === id ? 'selected' : ''}`)).join('')}</div>${body}`;
   }
   gridView() {
-    const quests = Object.values(this.c.quests).filter(q => q.type === 'side').sort((a, b) => a.grid - b.grid);
+    const quests = EnvironmentGridSystem.cells(this.s, this.c.quests).map(cell => cell.quest);
     return `<p class="muted">共好並非一個人的壯舉。完成環境支線，逐格點亮你在這段旅程留下的行動。</p><div class="environment-grid">${quests.map(q => { const status = this.s.quests[q.id]?.status; return `<article class="grid-cell ${status === 'completed' ? 'completed' : ''}"><span>${String(q.grid + 1).padStart(2, '0')}</span>${icon(status === 'completed' ? 'check' : status ? 'leaf' : 'lock')}<h3>${e(q.gridLabel)}</h3><p>${status === 'completed' ? '行動已完成' : status ? e(q.description) : '繼續主線以解鎖'}</p></article>`; }).join('')}</div><p class="fine-print">本九宮格是遊戲原創的環境行動設計。實地行動應遵守當地管理規範，依自身能力與安全條件進行。</p>`;
   }
   sourcesView() {

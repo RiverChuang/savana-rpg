@@ -11,6 +11,8 @@ import { DialogueSystem } from '../systems/DialogueSystem.js';
 import { BattleSystem } from '../systems/BattleSystem.js';
 import { StorySystem } from '../systems/StorySystem.js';
 import { AchievementSystem, achievementLabels } from '../systems/AchievementSystem.js';
+import { ReflectionSystem } from '../systems/ReflectionSystem.js';
+import { PledgeSystem } from '../systems/PledgeSystem.js';
 
 export class Game {
   constructor(content, storage) { this.content = content; this.saves = new SaveSystem(storage, content); this.events = new EventSystem(); this.state = null; this.lastSave = null; }
@@ -89,6 +91,23 @@ export class Game {
       this.record({ type: 'talk', target: ended });
     }
     this.changed();
+  }
+  choose(choiceId, reason) {
+    const id = this.state.choice;
+    const h = this.location.hotspots.find(h => h.kind === 'decision' && h.ref === id);
+    if (!h || this.state.battle || this.state.dialogue) throw new Error('此處無法記錄這個選擇。');
+    const record = ReflectionSystem.choose(this.state, this.content.decisions, choiceId, reason);
+    this.state.interactions.push(h.id);
+    addLog(this.state, record.result, 'reflection');
+    this.record({ type: 'decision', target: id }); this.changed(); return record;
+  }
+  makePledge(text, action) {
+    const h = this.location.hotspots.find(h => h.kind === 'pledge');
+    if (!h || this.state.battle || this.state.dialogue || this.state.choice) throw new Error('請先抵達寫下承諾的地方。');
+    PledgeSystem.write(this.state, text, action);
+    this.state.interactions.push(h.id);
+    addLog(this.state, '你寫下了自己的個人環境承諾。', 'success');
+    this.record({ type: 'pledge', target: 'personal' }); this.changed();
   }
   battle(command, parameter) {
     const result = BattleSystem.act(this.state, command, this.content, parameter);
